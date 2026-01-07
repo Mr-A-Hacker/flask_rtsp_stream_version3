@@ -52,6 +52,15 @@ function toggleFullscreen() {
     }
 }
 </script>
+<script>
+window.onload = () => {
+    fetch("/start_recording");
+};
+
+window.onbeforeunload = () => {
+    navigator.sendBeacon("/stop_recording");
+};
+</script>
 
 </body>
 </html>
