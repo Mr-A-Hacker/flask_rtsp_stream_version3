@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Draw Alarm Box</title>
+    <style>
+        body {
+            background-color: #111;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        #video-container {
+            position: relative;
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        #video {
+            border: 2px solid #444;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: crosshair;
+        }
+
+        #saveBtn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #0a84ff;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+
+        #saveBtn:hover {
+            background: #006edc;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Draw Alarm Box</h1>
+<p>Click and drag to draw the detection box.</p>
+
+<div id="video-container">
+    <img id="video" src="/video" width="960" height="540">
+    <canvas id="overlay" width="960" height="540"></canvas>
+</div>
+
+<button id="saveBtn">Save Alarm Box</button>
+
+<script>
+    const canvas = document.getElementById("overlay");
+    const ctx = canvas.getContext("2d");
+
+    let drawing = false;
+    let startX = 0, startY = 0;
+    let endX = 0, endY = 0;
+
+    canvas.addEventListener("mousedown", (e) => {
+        drawing = true;
+        const rect = canvas.getBoundingClientRect();
+        startX = e.clientX - rect.left;
+        startY = e.clientY - rect.top;
+    });
+
+    canvas.addEventListener("mousemove", (e) => {
+        if (!drawing) return;
+
+        const rect = canvas.getBoundingClientRect();
+        endX = e.clientX - rect.left;
+        endY = e.clientY - rect.top;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        ctx.strokeStyle = "lime";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(startX, startY, endX - startX, endY - startY);
+    });
+
+    canvas.addEventListener("mouseup", () => {
+        drawing = false;
+    });
+
+    document.getElementById("saveBtn").onclick = () => {
+        let x1 = Math.min(startX, endX) / canvas.width;
+        let y1 = Math.min(startY, endY) / canvas.height;
+        let x2 = Math.max(startX, endX) / canvas.width;
+        let y2 = Math.max(startY, endY) / canvas.height;
+
+        fetch("/set_alarm_box", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({x1, y1, x2, y2})
+        })
+        .then(r => r.json())
+        .then(d => {
+            alert("Alarm box saved!");
+        });
+    };
+</script>
+
+</body>
+</html>
